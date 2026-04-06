@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
 // ✅ Base API URL (BEST PRACTICE)
-const API = "https://e-commerce-backend-3-ot7q.onrender.com/";
+const API = "http://localhost:5001";
 
 export default function ProductDetails() {
   const { id } = useParams();
