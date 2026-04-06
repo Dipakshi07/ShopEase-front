@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./Contact.css";
 
+
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -25,7 +26,7 @@ const Contact = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5001/api/contact", {
+      const res = await fetch("https://e-commerce-backend-3-ot7q.onrender.com/api/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

@@ -17,7 +17,7 @@ const CategoryProducts = () => {
 
     setLoading(true);
 
-    fetch(`http://localhost:5001/api/products?category=${categoryName}`)
+    fetch(`https://e-commerce-backend-3-ot7q.onrender.com/${categoryName}`)
       .then((res) => res.json())
       .then((data) => {
         setProducts(data);
