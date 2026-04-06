@@ -1,0 +1,122 @@
+/* Section */
+.categories-section {
+  padding: 80px 20px;
+  background: #ffffff;
+}
+
+.categories-container {
+  max-width: 1200px;
+  margin: auto;
+  text-align: center;
+}
+
+/* Title */
+.categories-title {
+  font-size: 2.6rem;
+  color: #222;
+  font-weight: 700;
+}
+
+.categories-subtitle {
+  margin: 10px 0 50px;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Grid */
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* ✅ better for 3 items */
+  gap: 25px;
+}
+
+/* Card */
+.category-card {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  height: 260px;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  transition: 0.3s;
+}
+
+.category-card:hover {
+  transform: translateY(-8px);
+}
+
+.category-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* ✅ icons look better */
+  padding: 30px;
+  background: #f8f9fb;
+  transition: transform 0.4s ease;
+}
+
+.category-card:hover img {
+  transform: scale(1.1);
+}
+
+/* Overlay */
+.category-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.7),
+    rgba(0, 0, 0, 0.2)
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 25px;
+  color: #fff;
+}
+
+/* Text */
+.category-overlay h3 {
+  
+  font-size: 1.4rem;
+  margin-bottom: 12px;
+  text-transform: capitalize;
+}
+
+/* Button */
+.category-overlay button {
+  padding: 10px 22px;
+  border-radius: 25px;
+  border: none;
+  background: #ff6a00;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.category-overlay button:hover {
+  background: #e55d00;
+  transform: scale(1.05);
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .categories-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .categories-title {
+    font-size: 2.2rem;
+  }
+
+  .category-card {
+    height: 220px;
+  }
+}

@@ -1,0 +1,149 @@
+/* Container */
+.upi-container {
+  max-width: 450px;
+  margin: 40px auto;
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Card */
+.upi-card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Heading */
+.upi-title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* Product Summary */
+.product-box {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
+  background: #fafafa;
+}
+
+.product-box h3 {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.product-box p {
+  font-size: 14px;
+  color: #555;
+}
+
+/* Amount */
+.amount {
+  font-size: 20px;
+  font-weight: bold;
+  color: #111;
+  margin-top: 5px;
+}
+
+/* UPI App Buttons */
+.upi-apps {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.upi-app {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.upi-app:hover {
+  background: #f5f5f5;
+}
+
+.upi-app.active {
+  border: 2px solid #00a884;
+  background: #e8fdf7;
+  color: #00a884;
+}
+
+/* Input */
+.upi-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 14px;
+  margin-bottom: 15px;
+  transition: 0.3s;
+}
+
+.upi-input:focus {
+  border-color: #00a884;
+  box-shadow: 0 0 0 2px rgba(0, 168, 132, 0.1);
+}
+
+/* Pay Button */
+.pay-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #00a884, #007f67);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.pay-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Success Message */
+.success-msg {
+  margin-top: 15px;
+  text-align: center;
+  color: #00a884;
+  font-weight: 600;
+}
+
+/* Mobile Responsive */
+@media (max-width: 500px) {
+  .upi-container {
+    margin: 20px;
+    padding: 10px;
+  }
+
+  .upi-card {
+    padding: 15px;
+  }
+
+  .upi-title {
+    font-size: 18px;
+  }
+
+  .upi-app {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .pay-btn {
+    font-size: 14px;
+  }
+}

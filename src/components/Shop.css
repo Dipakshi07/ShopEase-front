@@ -1,0 +1,109 @@
+.shop {
+  padding: 90px 20px;
+  background: #f9fafc;
+}
+
+.shop-container {
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* Header */
+.shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 35px;
+}
+
+.shop-header h2 {
+  font-size: 2.4rem;
+}
+
+.view-all {
+  padding: 10px 22px;
+  border-radius: 25px;
+  border: none;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Grid */
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+}
+
+/* Card */
+.shop-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+}
+
+.shop-card:hover {
+  transform: translateY(-6px);
+}
+
+.shop-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.shop-info {
+  padding: 18px;
+}
+
+.shop-info h3 {
+  font-size: 1.1rem;
+}
+
+.shop-info p {
+  font-weight: 600;
+  margin: 8px 0 12px;
+  color: #ff6a00;
+}
+
+.shop-info button {
+  margin-top: 10px;
+  background: #ff6a00;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.shop-info button:hover {
+  background: #e55d00;
+}
+.remove-btn {
+  background: #ff4d4d !important;
+}
+
+.remove-btn:hover {
+  background: #e60000 !important;
+}
+/* Responsive */
+@media (max-width: 1024px) {
+  .shop-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .shop-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shop-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
