@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { products } from "../App"
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
