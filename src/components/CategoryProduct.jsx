@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext";
 import "./CategoryProduct.css";
 
 
-const API = "https://e-commerce-backend-3-ot7q.onrender.com/"; 
+const API = "https://e-commerce-backend-3-ot7q.onrender.com"; 
 
 const CategoryProducts = () => {
   const { categoryName } = useParams();
