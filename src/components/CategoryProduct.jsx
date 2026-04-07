@@ -3,6 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import "./CategoryProduct.css";
 
+
+const API = "https://e-commerce-backend-3-ot7q.onrender.com/"; 
+
 const CategoryProducts = () => {
   const { categoryName } = useParams();
   const navigate = useNavigate();
@@ -17,7 +20,7 @@ const CategoryProducts = () => {
 
     setLoading(true);
 
-    fetch(`http://localhost:5001/api/products?category=${categoryName}`)
+    fetch(`${API}/api/products?category=${categoryName}`)
       .then((res) => res.json())
       .then((data) => {
         setProducts(data);

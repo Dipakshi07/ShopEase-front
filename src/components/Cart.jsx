@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "./Cart.css";
 
 // ✅ BASE API URL
-const API = "http://localhost:5001";
+const API = "https://e-commerce-backend-3-ot7q.onrender.com/";
 
 // ⚠️ TEMP USER (replace after login)
 const USER_ID = "demoUser";
