@@ -1,40 +1,50 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import "./ProductDetails.css";
 
-// ✅ Base API URL (BEST PRACTICE)
-const API = "https://e-commerce-backend-3-ot7q.onrender.com";
+const API = "https://shop-ease-front-8tkg.vercel.app";
 
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+
+  const { user } = useAuth();
+
+  const {
+    addToCart,
+    increaseQuantity,
+    decreaseQuantity,
+    getCartItem,
+    removeFromCart, // ✅ ADD THIS IN CONTEXT
+  } = useCart();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [size, setSize] = useState(null);
+  const [size, setSize] = useState("Free");
   const [rating, setRating] = useState(0);
 
-  // 🔗 CONNECT TO BACKEND
+  // 🔗 FETCH PRODUCT
   useEffect(() => {
     if (!id) return;
 
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`${API}/api/products/${id}`);
+        setLoading(true);
 
-        if (!res.ok) {
-          throw new Error("Product not found");
-        }
+        const res = await fetch(`${API}/api/products/${id}`);
+        if (!res.ok) throw new Error("Product not found");
 
         const data = await res.json();
-        console.log("Fetched Product:", data);
-
         setProduct(data);
+
+        if (data.sizes?.length > 0) {
+          setSize(data.sizes[0]);
+        }
       } catch (err) {
-        console.error(err);
         setError(err.message || "Something went wrong");
       } finally {
         setLoading(false);
@@ -44,38 +54,60 @@ export default function ProductDetails() {
     fetchProduct();
   }, [id]);
 
-  // 🧠 STATES
-  if (loading) {
-    return <h2 style={{ padding: "20px" }}>Loading...</h2>;
-  }
+  if (loading) return <h2 style={{ padding: "20px" }}>Loading...</h2>;
+  if (error) return <h2 style={{ padding: "20px", color: "red" }}>{error}</h2>;
+  if (!product) return <h2 style={{ padding: "20px" }}>Product not found</h2>;
 
-  if (error) {
-    return <h2 style={{ padding: "20px", color: "red" }}>{error}</h2>;
-  }
+  // ✅ CART ITEM CHECK
+  const cartItem = getCartItem(product._id, size);
+  const isInCart = !!cartItem;
 
-  if (!product) {
-    return <h2 style={{ padding: "20px" }}>Product not found</h2>;
-  }
-
-  // 🛒 ADD TO CART (LOCAL CONTEXT)
+  // 🛒 ADD / REMOVE TOGGLE
   const handleCart = () => {
-    addToCart({
-      ...product,
-      size: size || "Free"
-    });
-    alert("Added to cart");
+    if (!user) {
+      alert("Please login first");
+      navigate("/login");
+      return;
+    }
+
+    if (isInCart) {
+      removeFromCart(product._id, size);
+    } else {
+      addToCart({
+        _id: product._id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        size,
+      });
+    }
   };
 
-  // 💳 BUY NOW
+  // 💳 BUY NOW FIXED
   const handleBuy = () => {
+    if (!user) {
+      alert("Please login first");
+      navigate("/login");
+      return;
+    }
+
     navigate("/payment", {
-      state: { product: { ...product, size: size || "Free" } }
+      state: {
+        products: [
+          {
+            ...product,
+            size,
+            quantity: 1,
+          },
+        ],
+        totalPrice: product.price,
+      },
     });
   };
 
   return (
     <div className="details-container">
-      {/* IMAGE */}
+
       <img
         src={product.image || "https://via.placeholder.com/300"}
         alt={product.name}
@@ -87,17 +119,8 @@ export default function ProductDetails() {
 
         <p>⭐ {product.rating || 4}</p>
 
-        {/* OPTIONAL DATA */}
         {product.material && (
           <p><b>Material:</b> {product.material}</p>
-        )}
-
-        {product.features?.length > 0 && (
-          <ul>
-            {product.features.map((f, i) => (
-              <li key={i}>{f}</li>
-            ))}
-          </ul>
         )}
 
         {/* SIZE */}
@@ -119,13 +142,25 @@ export default function ProductDetails() {
         )}
 
         {/* BUTTONS */}
-        <button onClick={handleCart} className="cart">
-          Add to Cart
-        </button>
+        <div style={{ marginTop: "15px" }}>
 
-        <button onClick={handleBuy} className="buy">
-          Buy Now
-        </button>
+          <button onClick={handleCart} className={isInCart ? "remove" : "cart"}>
+            {isInCart ? "Remove from Cart" : "Add to Cart"}
+          </button>
+
+          <button onClick={handleBuy} className="buy">
+            Buy Now
+          </button>
+
+          {/* QUANTITY */}
+          {isInCart && (
+            <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+              <button onClick={() => decreaseQuantity(product._id, size)}>-</button>
+              <span>{cartItem.quantity}</span>
+              <button onClick={() => increaseQuantity(product._id, size)}>+</button>
+            </div>
+          )}
+        </div>
 
         {/* RATING */}
         <div>
@@ -134,40 +169,14 @@ export default function ProductDetails() {
             <span
               key={star}
               onClick={() => setRating(star)}
-              style={{ cursor: "pointer", fontSize: "20px" }}
+              className="star"
             >
               {star <= rating ? "⭐" : "☆"}
             </span>
           ))}
         </div>
+
       </div>
-
-      <style>{`
-        .details-container {
-          display: flex;
-          gap: 30px;
-          padding: 20px;
-          flex-wrap: wrap;
-        }
-        img {
-          width: 350px;
-          border-radius: 10px;
-          object-fit: cover;
-        }
-        .info { max-width: 400px; }
-        .price { color: green; font-size: 22px; }
-        button { margin: 5px; padding: 10px; cursor: pointer; }
-        .active { background: black; color: white; }
-        .cart { background: orange; }
-        .buy { background: green; color: white; }
-
-        @media(max-width:768px){
-          .details-container {
-            flex-direction: column;
-            align-items: center;
-          }
-        }
-      `}</style>
     </div>
   );
 }

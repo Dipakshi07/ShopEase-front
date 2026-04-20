@@ -1,10 +1,7 @@
-import React from "react";
-import { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
-// Create Context
 const CartContext = createContext();
 
-// Custom Hook
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
@@ -13,94 +10,151 @@ export const useCart = () => {
   return context;
 };
 
-// Provider
+const API = "http://localhost:5001/api/cart";
+
 export const CartProvider = ({ children }) => {
-  // ✅ Load from localStorage
-  const [cartItems, setCartItems] = useState(() => {
-    const savedCart = localStorage.getItem("cart");
-    return savedCart ? JSON.parse(savedCart) : [];
-  });
+  const [cartItems, setCartItems] = useState([]);
 
-  // ✅ Save to localStorage
+  // 🔥 LOAD CART
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
-  }, [cartItems]);
+    fetchCart();
+  }, []);
 
-  // ✅ Add to Cart (with size support)
-  const addToCart = (product) => {
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find(
-        (item) =>
-          item.id === product.id && item.size === product.size
-      );
+  // 🔥 FETCH CART
+  const fetchCart = async () => {
+    try {
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
 
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id && item.size === product.size
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+      const res = await fetch(`${API}/${userId}`);
+      const data = await res.json();
+
+      setCartItems(data || []);
+    } catch (err) {
+      console.error("Fetch cart error:", err.message);
+    }
+  };
+
+  // 🔥 ADD TO CART
+  const addToCart = async (product) => {
+    try {
+      const userId = localStorage.getItem("userId");
+
+      if (!userId) {
+        alert("Please login first");
+        return;
       }
 
-      return [...prevItems, { ...product, quantity: 1 }];
-    });
+      await fetch(API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          productId: product._id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          size: product.size || "Free",
+          quantity: 1,
+        }),
+      });
+
+      fetchCart();
+    } catch (err) {
+      console.error("Add to cart error:", err.message);
+    }
   };
 
-  // ✅ Remove Item
-  const removeFromCart = (id, size) => {
-    setCartItems((prevItems) =>
-      prevItems.filter(
-        (item) => !(item.id === id && item.size === size)
-      )
+  // ✅ 🔥 FIXED REMOVE
+  const removeFromCart = async (productId, size) => {
+    try {
+      // 👉 find correct cart item
+      const item = cartItems.find(
+        (i) =>
+          (i.productId || i._id) === productId &&
+          i.size === size
+      );
+
+      if (!item) return;
+
+      // 👉 use REAL cart item id
+      await fetch(`${API}/${item._id}`, {
+        method: "DELETE",
+      });
+
+      fetchCart();
+    } catch (err) {
+      console.error("Remove error:", err.message);
+    }
+  };
+
+  // 🔥 INCREASE
+  const increaseQuantity = async (id, size) => {
+    const item = cartItems.find(
+      (i) =>
+        (i.productId || i._id) === id &&
+        i.size === size
     );
+
+    if (!item) return;
+
+    await updateQty(item._id, item.quantity + 1);
   };
 
-  // ✅ Increase Quantity
-  const increaseQuantity = (id, size) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id && item.size === size
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
+  // 🔥 DECREASE
+  const decreaseQuantity = async (id, size) => {
+    const item = cartItems.find(
+      (i) =>
+        (i.productId || i._id) === id &&
+        i.size === size
     );
+
+    if (!item || item.quantity <= 1) return;
+
+    await updateQty(item._id, item.quantity - 1);
   };
 
-  // ✅ Decrease Quantity
-  const decreaseQuantity = (id, size) => {
-    setCartItems((prevItems) =>
-      prevItems
-        .map((item) =>
-          item.id === id && item.size === size
-            ? { ...item, quantity: item.quantity - 1 }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
+  // 🔥 UPDATE QTY
+  const updateQty = async (cartItemId, quantity) => {
+    try {
+      const userId = localStorage.getItem("userId");
+
+      await fetch(`${API}/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cartItemId,
+          userId,
+          quantity,
+        }),
+      });
+
+      fetchCart();
+    } catch (err) {
+      console.error("Update qty error:", err.message);
+    }
   };
 
-  // ✅ Check if item exists
+  // ✅ FIXED isInCart
   const isInCart = (id, size) => {
     return cartItems.some(
-      (item) => item.id === id && item.size === size
+      (item) =>
+        (item.productId || item._id) === id &&
+        item.size === size
     );
   };
 
-  // ✅ Total Items
-  const totalItems = cartItems.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
-
-  // ✅ Total Price
-  const totalPrice = cartItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
-
-  // ✅ Clear Cart
-  const clearCart = () => {
-    setCartItems([]);
+  // ✅ FIXED getCartItem
+  const getCartItem = (id, size) => {
+    return cartItems.find(
+      (item) =>
+        (item.productId || item._id) === id &&
+        item.size === size
+    );
   };
 
   return (
@@ -111,10 +165,9 @@ export const CartProvider = ({ children }) => {
         removeFromCart,
         increaseQuantity,
         decreaseQuantity,
+        getCartItem,
         isInCart,
-        totalItems,
-        totalPrice,
-        clearCart,
+        fetchCart,
       }}
     >
       {children}

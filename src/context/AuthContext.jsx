@@ -1,34 +1,46 @@
-import React from "react";
-
-import { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // ✅ Load user from localStorage (refresh fix)
+
+  // 🔐 Load user from localStorage
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem("user");
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (err) {
+      console.error("Invalid user in localStorage");
+      return null;
+    }
   });
 
-  // ✅ Login function
+  // ✅ LOGIN (FIXED)
   const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData)); // persist
+
+    // 👉 IMPORTANT FIX: keep same user structure always
+    const userWithId = {
+      _id: userData._id || Date.now().toString(), // fallback only
+      name: userData.name,
+    };
+
+    setUser(userWithId);
+
+    localStorage.setItem("user", JSON.stringify(userWithId));
+
+    // 🔥 ALSO STORE FOR CART SYSTEM (IMPORTANT)
+    localStorage.setItem("userId", userWithId._id);
+    localStorage.setItem("userName", userWithId.name);
   };
 
-  // ✅ Logout function
+  // 🚪 LOGOUT
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
-  };
 
-  // ✅ Sync if needed (optional safety)
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    }
-  }, [user]);
+    localStorage.removeItem("user");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userName");
+  };
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
@@ -37,7 +49,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// ✅ Custom Hook
+// 🧠 CUSTOM HOOK
 export const useAuth = () => {
   const context = useContext(AuthContext);
 

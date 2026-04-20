@@ -1,5 +1,4 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
@@ -13,47 +12,53 @@ export default function Login() {
     password: ""
   });
 
+  // ✅ AUTO REDIRECT IF LOGGED IN
+  useEffect(() => {
+    if (user || localStorage.getItem("userId")) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // prevent multiple login
-  if (user) {
-    alert("Already logged in! Please logout first.");
+    const nameRegex = /^[A-Za-z\s]+$/;
+
+    if (!form.name || !form.password) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    if (!nameRegex.test(form.name)) {
+      alert("Only letters allowed in name");
+      return;
+    }
+
+    // 🔥 FAKE USER ID GENERATION (TEMP FIX)
+    const fakeUser = {
+      _id: Date.now().toString(), // temporary unique id
+      name: form.name.trim(),
+    };
+
+    // 🔐 SAVE IN CONTEXT
+    login(fakeUser);
+
+    // 🔥 SAVE IN LOCALSTORAGE (IMPORTANT FIX)
+    localStorage.setItem("userId", fakeUser._id);
+    localStorage.setItem("userName", fakeUser.name);
+
+    // clear form
+    setForm({
+      name: "",
+      password: ""
+    });
+
     navigate("/");
-    return;
-  }
-
-  const nameRegex = /^[A-Za-z\s]+$/; // ✅ only letters + spaces
-
-  // empty check
-  if (!form.name || !form.password) {
-    alert("Please fill all fields");
-    return;
-  }
-
-  // ❌ reject email / numbers / special chars
-  if (!nameRegex.test(form.name)) {
-    alert("Only name is allowed (letters only). No numbers, email or special characters!");
-    return;
-  }
-
-  // login
-  login({
-    name: form.name.trim()
-  });
-
-  // clear fields
-  setForm({
-    name: "",
-    password: ""
-  });
-
-  navigate("/");
-};
+  };
 
   return (
     <div className="login-page">

@@ -1,102 +1,162 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import "./CategoryProduct.css";
 
-
-const API = "https://e-commerce-backend-3-ot7q.onrender.com"; 
+const API = "https://shop-ease-front-8tkg.vercel.app";
 
 const CategoryProducts = () => {
-  const { categoryName } = useParams();
+  const { category } = useParams();
   const navigate = useNavigate();
-  const { addToCart, removeFromCart, isInCart } = useCart();
+
+  const { user } = useAuth();
+
+  const {
+    addToCart,
+    removeFromCart,
+    isInCart,
+  } = useCart();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // ✅ FETCH FROM BACKEND
   useEffect(() => {
-    if (!categoryName) return;
+    if (!category) return;
 
-    setLoading(true);
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
 
-    fetch(`${API}/api/products?category=${categoryName}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setProducts(data);
+        const res = await fetch(
+          `${API}/api/products/category/${category}`
+        );
+
+        if (!res.ok) throw new Error("Failed to fetch");
+
+        const data = await res.json();
+        setProducts(data.products || []);
+      } catch (err) {
+        setError("Failed to load products");
+        setProducts([]);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
-      });
+      }
+    };
 
-  }, [categoryName]);
+    fetchProducts();
+  }, [category]);
 
-  // ✅ HANDLE INVALID CATEGORY
-  if (!categoryName) {
+  if (!category) {
     return <h2 style={{ padding: "20px" }}>Category not found</h2>;
   }
+
+  // 🔐 LOGIN CHECK
+  const checkLogin = () => {
+    if (!user) {
+      alert("Please login first");
+      navigate("/login");
+      return false;
+    }
+    return true;
+  };
 
   return (
     <div className="category-products">
 
-      {/* ✅ TITLE */}
       <h2 className="category-title">
-        {categoryName.charAt(0).toUpperCase() + categoryName.slice(1)} Products
+        {category.charAt(0).toUpperCase() + category.slice(1)} Products
       </h2>
 
-      {/* ✅ LOADING */}
       {loading ? (
-        <p style={{ textAlign: "center" }}>Loading...</p>
+        <p className="center">Loading...</p>
+      ) : error ? (
+        <p className="center error">{error}</p>
       ) : products.length === 0 ? (
-        <p style={{ textAlign: "center" }}>
-          No products found in "{categoryName}"
-        </p>
+        <p className="center">No products found in "{category}"</p>
       ) : (
-
         <div className="products-grid">
           {products.map((item) => {
-
             const size = item.sizes?.[0] || "Free";
-            const inCart = isInCart(item._id || item.id, size);
+            const productId = item._id;
+
+            const inCart = isInCart(productId, size);
 
             return (
-              <div className="product-card" key={item._id || item.id}>
+              <div className="product-card" key={productId}>
 
                 {/* IMAGE */}
                 <img
-                  src={item.image}
+                  src={item.image || "https://via.placeholder.com/200"}
                   alt={item.name}
                   className="product-image"
-                  onClick={() => navigate(`/product/${item._id || item.id}`)}
-                  style={{ cursor: "pointer" }}
+                  onClick={() =>
+                    navigate(`/product/${productId}`)
+                  }
                 />
 
                 <div className="product-info">
                   <h3 className="product-name">{item.name}</h3>
                   <p className="product-price">₹{item.price}</p>
 
-                  {/* CART BUTTON */}
-                  <button
-                    className={`product-btn ${inCart ? "remove" : ""}`}
-                    onClick={() =>
-                      inCart
-                        ? removeFromCart(item._id || item.id, size)
-                        : addToCart({ ...item, size })
-                    }
-                  >
-                    {inCart ? "Remove from Cart" : "Add to Cart"}
-                  </button>
+                  {/* 🔥 BUTTON GROUP */}
+                  <div className="btn-group">
 
+                    {/* ADD / REMOVE */}
+                    <button
+                      className={`product-btn ${inCart ? "remove" : ""}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+
+                        if (!checkLogin()) return;
+
+                        inCart
+                          ? removeFromCart(productId, size)
+                          : addToCart({
+                              _id: productId,
+                              name: item.name,
+                              price: item.price,
+                              image: item.image,
+                              size,
+                            });
+                      }}
+                    >
+                      {inCart ? "Remove" : "Add to Cart"}
+                    </button>
+
+                    {/* BUY NOW */}
+                    <button
+                      className="buy-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+
+                        if (!checkLogin()) return;
+
+                        navigate("/payment", {
+                          state: {
+                            products: [
+                              {
+                                ...item,
+                                size,
+                                quantity: 1,
+                              },
+                            ],
+                            totalPrice: item.price,
+                          },
+                        });
+                      }}
+                    >
+                      Buy Now
+                    </button>
+
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
-
       )}
-
     </div>
   );
 };

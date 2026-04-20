@@ -65,20 +65,47 @@
   font-weight: 600;
 }
 
-/* Button */
+.btn-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .product-btn {
-  margin-top: auto;
-  padding: 10px;
+  flex: 1;
+  padding: 8px;
   border: none;
-  background: #111;
+  background: #ff9800;
   color: white;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.product-btn.remove {
+  background: #e53935;
+}
+
+.buy-btn {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: #2e7d32;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
   transition: 0.3s;
 }
 
-.product-btn:hover {
-  background: #ff6a00;
+.center {
+  text-align: center;
+}
+
+.error {
+  color: red;
 }
 
 /* Tablet */

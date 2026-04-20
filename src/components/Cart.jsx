@@ -1,13 +1,8 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Cart.css";
 
-// ✅ BASE API URL
-const API = "https://e-commerce-backend-3-ot7q.onrender.com";
-
-// ⚠️ TEMP USER (replace after login)
-const USER_ID = "demoUser";
+const API = "https://shop-ease-front-8tkg.vercel.app";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -16,65 +11,84 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ✅ FETCH CART FROM BACKEND
-  useEffect(() => {
-    const fetchCart = async () => {
-      try {
-        const res = await fetch(`${API}/api/cart/${USER_ID}`);
+  const USER_ID = localStorage.getItem("userId");
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch cart");
-        }
+  // ✅ FETCH CART
+  const fetchCart = async () => {
+    if (!USER_ID) {
+      setError("User not logged in");
+      setLoading(false);
+      return;
+    }
 
-        const data = await res.json();
-        console.log("Cart Data:", data);
-
-        setCartItems(data);
-      } catch (err) {
-        console.error(err);
-        setError("Unable to load cart");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCart();
-  }, []);
-
-  // ❌ REMOVE ITEM (BACKEND)
-  const handleRemove = async (cartId) => {
     try {
-      await fetch(`${API}/api/cart/${cartId}`, {
+      const res = await fetch(`${API}/api/cart/${USER_ID}`);
+      if (!res.ok) throw new Error("Failed to fetch cart");
+
+      const data = await res.json();
+      setCartItems(data);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to load cart");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCart();
+  }, [USER_ID]);
+
+  // ❌ REMOVE FIXED
+  const handleRemove = async (productId) => {
+    try {
+      await fetch(`${API}/api/cart/${productId}`, {
         method: "DELETE",
       });
 
-      // update UI
       setCartItems((prev) =>
-        prev.filter((item) => item._id !== cartId)
+        prev.filter((item) => item.productId !== productId)
       );
     } catch (err) {
       console.error(err);
     }
   };
 
-  // 💰 TOTAL PRICE
+  // ➕ INCREASE
+  const increaseQty = (id) => {
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.productId === id
+          ? { ...item, quantity: (item.quantity || 1) + 1 }
+          : item
+      )
+    );
+  };
+
+  // ➖ DECREASE
+  const decreaseQty = (id) => {
+    setCartItems((prev) =>
+      prev
+        .map((item) =>
+          item.productId === id
+            ? { ...item, quantity: (item.quantity || 1) - 1 }
+            : item
+        )
+        .filter((item) => item.quantity > 0)
+    );
+  };
+
+  // 💰 TOTAL
   const totalPrice = cartItems.reduce((total, item) => {
     const discount = item.discount || 0;
-    const quantity = item.quantity || 1;
+    const qty = item.quantity || 1;
 
     const discountAmount = (item.price * discount) / 100;
-    return total + (item.price - discountAmount) * quantity;
+    return total + (item.price - discountAmount) * qty;
   }, 0);
 
-  // 🔄 LOADING
-  if (loading) {
-    return <h2 style={{ padding: "20px" }}>Loading cart...</h2>;
-  }
-
-  // ❌ ERROR
-  if (error) {
-    return <h2 style={{ padding: "20px", color: "red" }}>{error}</h2>;
-  }
+  if (loading) return <h2 style={{ padding: "20px" }}>Loading cart...</h2>;
+  if (error) return <h2 style={{ padding: "20px", color: "red" }}>{error}</h2>;
 
   return (
     <div className="cart">
@@ -87,14 +101,13 @@ const Cart = () => {
           <div className="cart-items">
             {cartItems.map((item) => {
               const discount = item.discount || 0;
-              const quantity = item.quantity || 1;
+              const qty = item.quantity || 1;
 
               const discountAmount = (item.price * discount) / 100;
               const finalPrice = item.price - discountAmount;
 
               return (
-                <div className="cart-item" key={item._id}>
-                  {/* ✅ SAFE IMAGE */}
+                <div className="cart-item" key={item.productId}>
                   <img
                     src={item.image || "https://via.placeholder.com/100"}
                     alt={item.name}
@@ -103,23 +116,26 @@ const Cart = () => {
                   <div className="cart-details">
                     <h4>{item.name}</h4>
                     <p>Price: ₹{item.price}</p>
-
                     <p>Size: {item.size || "Free"}</p>
 
                     {item.discountText && (
-                      <p className="discount">
-                        {item.discountText}
-                      </p>
+                      <p className="discount">{item.discountText}</p>
                     )}
 
                     <p>Final: ₹{finalPrice}</p>
-                    <p>Qty: {quantity}</p>
+
+                    <div className="qty-box">
+                      <button onClick={() => decreaseQty(item.productId)}>-</button>
+                      <span>{qty}</span>
+                      <button onClick={() => increaseQty(item.productId)}>+</button>
+                    </div>
+
+                    <p>Total: ₹{finalPrice * qty}</p>
                   </div>
 
-                  {/* ❌ REMOVE */}
                   <button
                     className="remove-btn"
-                    onClick={() => handleRemove(item._id)}
+                    onClick={() => handleRemove(item.productId)}
                   >
                     Remove
                   </button>
@@ -128,7 +144,6 @@ const Cart = () => {
             })}
           </div>
 
-          {/* 💰 SUMMARY */}
           <div className="cart-summary">
             <h3>Total Payable: ₹{totalPrice}</h3>
 
@@ -140,7 +155,7 @@ const Cart = () => {
                 })
               }
             >
-              Buy Now
+              Proceed to Pay
             </button>
           </div>
         </>

@@ -1,0 +1,240 @@
+/* 🔥 MAIN CONTAINER */
+.details-container {
+  display: flex;
+  gap: 40px;
+  padding: 40px;
+  max-width: 1200px;
+  margin: auto;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* 🖼️ IMAGE */
+.details-container img {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* 📦 INFO SECTION */
+.info {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* 🏷️ TITLE */
+.info h2 {
+  font-size: 26px;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+/* 💰 PRICE */
+.price {
+  font-size: 22px;
+  color: #e63946;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* ⭐ TEXT */
+.info p {
+  margin: 8px 0;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* 📋 FEATURES */
+.info ul {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.info li {
+  margin-bottom: 6px;
+}
+
+/* 🔘 SIZE BUTTONS */
+.info button {
+  margin: 5px;
+  padding: 7px 12px;
+  border: 1.5px solid #422c2c;
+  background: #fff8c4;
+  cursor: pointer;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: 0.3s;
+  font-size: 14px;
+}
+
+.info button:hover {
+  color: white;
+  background: #dd3131;
+}
+
+/* ✅ ACTIVE SIZE */
+.info button.active {
+  background: black;
+  color: white;
+  border-color: black;
+}
+
+/* 🔘 BUTTON GROUP */
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+/* 🛒 CART BUTTON */
+.cart {
+  flex: 1;
+  min-width: 130px;
+  padding: 10px 14px;
+  background: #25a6f6;
+  color: #0e0d0d;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.cart:hover {
+  background: #1d3557;
+  color: white;
+}
+
+/* 💳 BUY BUTTON */
+.buy {
+  flex: 1;
+  min-width: 130px;
+  padding: 10px 14px;
+  background-color: #e63946;
+  color: #0e0c0c;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.buy:hover {
+  background: #b71c1c;
+  color: white;
+}
+
+/* 🔢 QUANTITY BOX (🔥 NEW) */
+.quantity-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* ➖ ➕ BUTTONS */
+.quantity-box button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #222;
+  color: white;
+  font-size: 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.quantity-box button:hover {
+  background: #e63946;
+}
+
+/* 🔢 NUMBER */
+.quantity-box span {
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* ⭐ STAR RATING */
+.star {
+  font-size: 20px;
+  cursor: pointer;
+  margin-right: 5px;
+  transition: transform 0.2s;
+}
+
+.star:hover {
+  transform: scale(1.2);
+}
+
+/* ========================= */
+/* 📱 TABLET RESPONSIVE */
+/* ========================= */
+@media (max-width: 768px) {
+  .details-container {
+    flex-direction: column;
+    padding: 20px;
+    gap: 25px;
+  }
+
+  .details-container img {
+    max-width: 100%;
+  }
+
+  .info h2 {
+    font-size: 22px;
+  }
+
+  .price {
+    font-size: 20px;
+  }
+
+  .cart,
+  .buy {
+    font-size: 13px;
+    padding: 9px;
+  }
+}
+
+/* ========================= */
+/* 📱 MOBILE RESPONSIVE */
+/* ========================= */
+@media (max-width: 480px) {
+  .details-container {
+    padding: 15px;
+  }
+
+  .info {
+    min-width: 100%;
+  }
+
+  .info h2 {
+    font-size: 20px;
+  }
+
+  .price {
+    font-size: 18px;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .cart,
+  .buy {
+    width: 100%;
+  }
+
+  .quantity-box {
+    justify-content: center;
+  }
+
+  .star {
+    font-size: 18px;
+  }
+}

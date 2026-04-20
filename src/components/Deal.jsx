@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Deal.css";
 
-const API = "https://e-commerce-backend-3-ot7q.onrender.com";
-const USER_ID = "demoUser"; // ⚠️ replace after login
+const API = "https://shop-ease-front-8tkg.vercel.app";
+const USER_ID = "demoUser";
 
 const Deal = () => {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ const Deal = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ✅ FETCH DEALS FROM BACKEND
+  // ✅ FETCH DEALS
   useEffect(() => {
     const fetchDeals = async () => {
       try {
@@ -23,13 +23,19 @@ const Deal = () => {
         }
 
         const data = await res.json();
+        console.log("API DATA:", data);
 
-        // 🔥 FILTER DEAL PRODUCTS
-        const dealItems = data.filter(
-          (p) => p.category?.toLowerCase() === "deal"
+        // ✅ HANDLE BOTH CASES (array OR object)
+        const products = Array.isArray(data) ? data : data.products || [];
+
+        // ✅ FLEXIBLE FILTER (fix main issue)
+        const dealItems = products.filter((p) =>
+          p.category?.toLowerCase().includes("deal")
         );
 
-        setDeals(dealItems);
+        // ✅ FALLBACK (if no deals found)
+        setDeals(dealItems.length > 0 ? dealItems : products.slice(0, 4));
+
       } catch (err) {
         console.error(err);
         setError("Unable to load deals");
@@ -41,7 +47,7 @@ const Deal = () => {
     fetchDeals();
   }, []);
 
-  // 🛒 ADD TO CART (BACKEND)
+  // 🛒 ADD TO CART
   const handleAddToCart = async (deal) => {
     try {
       await fetch(`${API}/api/cart/add`, {
@@ -50,7 +56,7 @@ const Deal = () => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          productId: deal._id,
+          productId: deal._ID,
           name: deal.name,
           price: deal.price,
           image: deal.image,
@@ -74,7 +80,7 @@ const Deal = () => {
   };
 
   // 🔄 LOADING
-  if (loading) return <h2>Loading deals...</h2>;
+  if (loading) return <h2 style={{ padding: "20px" }}>Loading deals...</h2>;
 
   // ❌ ERROR
   if (error) return <h2 style={{ color: "red" }}>{error}</h2>;
@@ -93,13 +99,13 @@ const Deal = () => {
             <p>No deals available</p>
           ) : (
             deals.map((deal) => (
-              <div className="deal-card" key={deal._id}>
+              <div className="deal-card" key={deal._ID}>
 
-                {/* CLICK → PRODUCT DETAILS */}
+                {/* IMAGE CLICK */}
                 <img
                   src={deal.image || "https://via.placeholder.com/200"}
                   alt={deal.name}
-                  onClick={() => navigate(`/product/${deal._id}`)}
+                  onClick={() => navigate(`/product/${deal._ID}`)}
                   style={{ cursor: "pointer" }}
                 />
 
@@ -112,21 +118,21 @@ const Deal = () => {
                   <p>{deal.description}</p>
                   <p className="price">₹{deal.price}</p>
 
-                  {/* ADD TO CART */}
-                  <button
-                    className="add-btn"
-                    onClick={() => handleAddToCart(deal)}
-                  >
-                    Add to Cart
-                  </button>
+                  <div className="deal-buttons">
+                    <button
+                      className="add-btn"
+                      onClick={() => handleAddToCart(deal)}
+                    >
+                      Add to Cart
+                    </button>
 
-                  {/* BUY NOW */}
-                  <button
-                    className="buy-btn"
-                    onClick={() => handleBuyNow(deal)}
-                  >
-                    Buy Now
-                  </button>
+                    <button
+                      className="buy-btn"
+                      onClick={() => handleBuyNow(deal)}
+                    >
+                      Buy Now
+                    </button>
+                  </div>
 
                 </div>
               </div>

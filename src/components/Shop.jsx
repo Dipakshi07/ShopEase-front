@@ -3,7 +3,7 @@ import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import "./Shop.css";
 
-const API = "https://e-commerce-backend-3-ot7q.onrender.com";
+const API = "https://shop-ease-front-8tkg.vercel.app";
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
@@ -11,25 +11,24 @@ const Shop = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const { addToCart, removeFromCart, isInCart } = useCart();
+  const {
+    addToCart,
+    removeFromCart,
+    isInCart, // now SAFE
+  } = useCart();
+
   const navigate = useNavigate();
 
-  // ✅ FETCH PRODUCTS FROM BACKEND
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const res = await fetch(`${API}/api/products`);
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch products");
-        }
+        if (!res.ok) throw new Error("Failed to fetch products");
 
         const data = await res.json();
-        console.log("Products:", data);
-
-        setProducts(data);
+        setProducts(data.products || []);
       } catch (err) {
-        console.error(err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -39,15 +38,8 @@ const Shop = () => {
     fetchProducts();
   }, []);
 
-  // ✅ LOADING
-  if (loading) {
-    return <h2 style={{ padding: "20px" }}>Loading products...</h2>;
-  }
-
-  // ❌ ERROR
-  if (error) {
-    return <h2 style={{ padding: "20px" }}>{error}</h2>;
-  }
+  if (loading) return <h2 style={{ padding: "20px" }}>Loading products...</h2>;
+  if (error) return <h2 style={{ padding: "20px" }}>{error}</h2>;
 
   const visibleProducts = showAll ? products : products.slice(0, 4);
 
@@ -68,20 +60,19 @@ const Shop = () => {
 
         <div className="shop-grid">
           {visibleProducts.map((product) => {
-
             const size = product.sizes?.[0] || "Free";
 
-            // ✅ FIX: use _id
             const inCart = isInCart(product._id, size);
 
             return (
               <div className="shop-card" key={product._id}>
 
-                {/* ✅ CLICK → PRODUCT DETAILS */}
                 <img
                   src={product.image || "https://via.placeholder.com/200"}
                   alt={product.name}
-                  onClick={() => navigate(`/product/${product._id}`)}
+                  onClick={() =>
+                    navigate(`/product/${product._id}`)
+                  }
                   style={{ cursor: "pointer" }}
                 />
 
@@ -89,7 +80,6 @@ const Shop = () => {
                   <h3>{product.name}</h3>
                   <p>₹{product.price}</p>
 
-                  {/* ✅ CART BUTTON */}
                   <button
                     onClick={() =>
                       inCart

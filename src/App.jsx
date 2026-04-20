@@ -44,11 +44,7 @@ function App() {
           <Route path="/categories" element={<Categories />} />
 
           {/* ✅ FIXED ROUTE */}
-          <Route
-            path="/category/:categoryName"
-            element={<CategoryProducts />}
-          />
-
+          <Route path="/category/:category" element={<CategoryProducts />} />
           <Route path="/product/:id" element={<ProductDetails />} />
 
           {/* ================= USER ================= */}

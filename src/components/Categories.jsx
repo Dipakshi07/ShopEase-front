@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Categories.css";
-import { products } from "../data/products"; // ✅ IMPORT PRODUCTS
+
+const API = "https://shop-ease-front-8tkg.vercel.app"; // ✅ backend
 
 const categories = [
   { id: 1, name: "electronics", image: "https://img.freepik.com/premium-photo/illustration-ultra-realistic-4k-image-modern-electronic-device_756405-53536.jpg" },
@@ -15,9 +16,27 @@ const categories = [
 
 const Categories = () => {
   const navigate = useNavigate();
+  const [allProducts, setAllProducts] = useState([]);
+
+  // ✅ FETCH FROM BACKEND
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(`${API}/api/products`);
+        const data = await res.json();
+
+        // ⚠️ because backend returns { products: [...] }
+        setAllProducts(data.products || []);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleCategoryClick = (category) => {
-    navigate(`/category/${category.toLowerCase()}`);
+    navigate(`/category/${category}`);
   };
 
   return (
@@ -32,9 +51,13 @@ const Categories = () => {
         <div className="categories-grid">
           {categories.map((cat) => {
 
-            // ✅ Filter products for this category (max 2 preview)
-            const categoryProducts = products
-              .filter((item) => item.category === cat.name)
+            // ✅ FILTER FROM BACKEND DATA
+            const categoryProducts = allProducts
+              .filter(
+                (item) =>
+                  item.category?.toLowerCase().trim() ===
+                  cat.name.toLowerCase().trim()
+              )
               .slice(0, 2);
 
             return (
@@ -43,41 +66,40 @@ const Categories = () => {
                 key={cat.id}
                 onClick={() => handleCategoryClick(cat.name)}
               >
-                <img src={cat.image} alt={cat.name} className="category-icon" />
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="category-icon"
+                />
 
-               <div className="category-overlay">
-                <h3>{cat.name}</h3>
+                <div className="category-overlay">
+                  <h3>{cat.name}</h3>
 
-                <button
-                   onClick={(e) => {
-                   e.stopPropagation();
-                  handleCategoryClick(cat.name);
-                   }}
-                >
-                 View Products
-                </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCategoryClick(cat.name);
+                    }}
+                  >
+                    View Products
+                  </button>
                 </div>
 
-
-                {/* ✅ SAFE PRODUCT PREVIEW */}
+                {/* ✅ PRODUCT PREVIEW */}
                 <div className="product-preview">
                   {categoryProducts.length > 0 ? (
                     categoryProducts.map((p) => (
-                      <img key={p.id} src={p.image} alt={p.name} />
+                      <img
+                        key={p._id}
+                        src={p.image}
+                        alt={p.name}
+                      />
                     ))
                   ) : (
-                    <p>No products</p> // fallback
+                    <p>No products</p>
                   )}
                 </div>
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCategoryClick(cat.name);
-                  }}
-                >
-                  View Products
-                </button>
               </div>
             );
           })}
