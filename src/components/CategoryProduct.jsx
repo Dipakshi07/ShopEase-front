@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import "./CategoryProduct.css";
 
-const API = "https://shop-ease-front-8tkg.vercel.app";
+const API = "https://e-commerce-backend-3-ot7q.onrender.com";
 
 const CategoryProducts = () => {
   const { category } = useParams();

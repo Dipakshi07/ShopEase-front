@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const API = "https://shop-ease-front-8tkg.vercel.app";
+const API = "https://e-commerce-backend-3-ot7q.onrender.com";
 
 const Payment = () => {
   const location = useLocation();

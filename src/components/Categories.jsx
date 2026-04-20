@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Categories.css";
 
-const API = "https://shop-ease-front-8tkg.vercel.app"; // ✅ backend
+const API = "https://e-commerce-backend-3-ot7q.onrender.com"; // ✅ backend
 
 const categories = [
   { id: 1, name: "electronics", image: "https://img.freepik.com/premium-photo/illustration-ultra-realistic-4k-image-modern-electronic-device_756405-53536.jpg" },

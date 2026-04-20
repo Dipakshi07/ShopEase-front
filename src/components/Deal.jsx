@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Deal.css";
 
-const API = "https://shop-ease-front-8tkg.vercel.app";
+const API = "https://e-commerce-backend-3-ot7q.onrender.com";
 const USER_ID = "demoUser";
 
 const Deal = () => {

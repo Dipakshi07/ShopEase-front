@@ -3,7 +3,7 @@ import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import "./Shop.css";
 
-const API = "https://shop-ease-front-8tkg.vercel.app";
+const API = "https://e-commerce-backend-3-ot7q.onrender.com";
 
 const Shop = () => {
   const [products, setProducts] = useState([]);

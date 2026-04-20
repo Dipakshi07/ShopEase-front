@@ -25,7 +25,7 @@ const Contact = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("https://shop-ease-front-8tkg.vercel.app/api/contact", {
+      const res = await fetch("https://e-commerce-backend-3-ot7q.onrender.com/api/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
