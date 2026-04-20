@@ -10,7 +10,7 @@ export const useCart = () => {
   return context;
 };
 
-const API = "http://localhost:5001/api/cart";
+const API = "https://e-commerce-backend-3-ot7q.onrender.com/api/cart";
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
