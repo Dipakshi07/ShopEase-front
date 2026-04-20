@@ -26,7 +26,7 @@ const Cart = () => {
       if (!res.ok) throw new Error("Failed to fetch cart");
 
       const data = await res.json();
-      setCartItems(data);
+      setCartItems(data || []);
     } catch (err) {
       console.error(err);
       setError("Unable to load cart");
@@ -39,45 +39,51 @@ const Cart = () => {
     fetchCart();
   }, [USER_ID]);
 
-  // ❌ REMOVE FIXED
- const handleRemove = async (cartItemId) => {
-  try {
-    await fetch(`${API}/api/cart/${cartItemId}`, {
-      method: "DELETE",
-    });
+  // ✅ REMOVE
+  const handleRemove = async (cartItemId) => {
+    try {
+      await fetch(`${API}/api/cart/${cartItemId}`, {
+        method: "DELETE",
+      });
 
-    // UI update
-    setCartItems(prev =>
-      prev.filter(item => item._id !== cartItemId)
-    );
+      setCartItems(prev =>
+        prev.filter(item => item._id !== cartItemId)
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  } catch (err) {
-    console.error(err);
-  }
-};
+  // ✅ UPDATE QTY (BACKEND SYNC)
+  const updateQty = async (cartItemId, quantity) => {
+    try {
+      await fetch(`${API}/api/cart/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cartItemId,
+          userId: USER_ID,
+          quantity,
+        }),
+      });
+
+      fetchCart();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // ➕ INCREASE
-  const increaseQty = (id) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.productId === id
-          ? { ...item, quantity: (item.quantity || 1) + 1 }
-          : item
-      )
-    );
+  const increaseQty = (item) => {
+    updateQty(item._id, item.quantity + 1);
   };
 
   // ➖ DECREASE
-  const decreaseQty = (id) => {
-    setCartItems((prev) =>
-      prev
-        .map((item) =>
-          item.productId === id
-            ? { ...item, quantity: (item.quantity || 1) - 1 }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
+  const decreaseQty = (item) => {
+    if (item.quantity <= 1) return;
+    updateQty(item._id, item.quantity - 1);
   };
 
   // 💰 TOTAL
@@ -109,7 +115,8 @@ const Cart = () => {
               const finalPrice = item.price - discountAmount;
 
               return (
-                <div className="cart-item" key={item.productId}>
+                <div className="cart-item" key={item._id}>
+                  
                   <img
                     src={item.image || "https://via.placeholder.com/100"}
                     alt={item.name}
@@ -127,9 +134,9 @@ const Cart = () => {
                     <p>Final: ₹{finalPrice}</p>
 
                     <div className="qty-box">
-                      <button onClick={() => decreaseQty(item.productId)}>-</button>
+                      <button onClick={() => decreaseQty(item)}>-</button>
                       <span>{qty}</span>
-                      <button onClick={() => increaseQty(item.productId)}>+</button>
+                      <button onClick={() => increaseQty(item)}>+</button>
                     </div>
 
                     <p>Total: ₹{finalPrice * qty}</p>
