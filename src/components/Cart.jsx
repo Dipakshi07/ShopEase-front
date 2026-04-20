@@ -40,19 +40,21 @@ const Cart = () => {
   }, [USER_ID]);
 
   // ❌ REMOVE FIXED
-  const handleRemove = async (productId) => {
-    try {
-      await fetch(`${API}/api/cart/${productId}`, {
-        method: "DELETE",
-      });
+ const handleRemove = async (cartItemId) => {
+  try {
+    await fetch(`${API}/api/cart/${cartItemId}`, {
+      method: "DELETE",
+    });
 
-      setCartItems((prev) =>
-        prev.filter((item) => item.productId !== productId)
-      );
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    // UI update
+    setCartItems(prev =>
+      prev.filter(item => item._id !== cartItemId)
+    );
+
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   // ➕ INCREASE
   const increaseQty = (id) => {
@@ -135,7 +137,7 @@ const Cart = () => {
 
                   <button
                     className="remove-btn"
-                    onClick={() => handleRemove(item.productId)}
+                    onClick={() => handleRemove(item._id)}
                   >
                     Remove
                   </button>
