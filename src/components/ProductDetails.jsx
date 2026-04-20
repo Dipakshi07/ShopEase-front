@@ -17,7 +17,7 @@ export default function ProductDetails() {
     increaseQuantity,
     decreaseQuantity,
     getCartItem,
-    removeFromCart, // ✅ ADD THIS IN CONTEXT
+    removeFromCart,
   } = useCart();
 
   const [product, setProduct] = useState(null);
@@ -58,11 +58,11 @@ export default function ProductDetails() {
   if (error) return <h2 style={{ padding: "20px", color: "red" }}>{error}</h2>;
   if (!product) return <h2 style={{ padding: "20px" }}>Product not found</h2>;
 
-  // ✅ CART ITEM CHECK
+  // ✅ CART ITEM
   const cartItem = getCartItem(product._id, size);
   const isInCart = !!cartItem;
 
-  // 🛒 ADD / REMOVE TOGGLE
+  // 🛒 ADD / REMOVE FIXED
   const handleCart = () => {
     if (!user) {
       alert("Please login first");
@@ -70,8 +70,9 @@ export default function ProductDetails() {
       return;
     }
 
-    if (isInCart) {
-      removeFromCart(product._id, size);
+    if (isInCart && cartItem) {
+      // ✅ FIX: use cartItem._id
+      removeFromCart(cartItem._id);
     } else {
       addToCart({
         _id: product._id,
@@ -83,7 +84,7 @@ export default function ProductDetails() {
     }
   };
 
-  // 💳 BUY NOW FIXED
+  // 💳 BUY NOW
   const handleBuy = () => {
     if (!user) {
       alert("Please login first");
@@ -144,7 +145,10 @@ export default function ProductDetails() {
         {/* BUTTONS */}
         <div style={{ marginTop: "15px" }}>
 
-          <button onClick={handleCart} className={isInCart ? "remove" : "cart"}>
+          <button
+            onClick={handleCart}
+            className={isInCart ? "remove" : "cart"}
+          >
             {isInCart ? "Remove from Cart" : "Add to Cart"}
           </button>
 
@@ -153,13 +157,14 @@ export default function ProductDetails() {
           </button>
 
           {/* QUANTITY */}
-          {isInCart && (
+          {isInCart && cartItem && (
             <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
               <button onClick={() => decreaseQuantity(product._id, size)}>-</button>
               <span>{cartItem.quantity}</span>
               <button onClick={() => increaseQuantity(product._id, size)}>+</button>
             </div>
           )}
+
         </div>
 
         {/* RATING */}

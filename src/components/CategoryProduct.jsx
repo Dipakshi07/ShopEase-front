@@ -16,12 +16,14 @@ const CategoryProducts = () => {
     addToCart,
     removeFromCart,
     isInCart,
+    getCartItem, // ✅ IMPORTANT
   } = useCart();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // 🔥 FETCH PRODUCTS
   useEffect(() => {
     if (!category) return;
 
@@ -64,7 +66,6 @@ const CategoryProducts = () => {
 
   return (
     <div className="category-products">
-
       <h2 className="category-title">
         {category.charAt(0).toUpperCase() + category.slice(1)} Products
       </h2>
@@ -82,6 +83,7 @@ const CategoryProducts = () => {
             const productId = item._id;
 
             const inCart = isInCart(productId, size);
+            const cartItem = getCartItem(productId, size); // ✅ FIX
 
             return (
               <div className="product-card" key={productId}>
@@ -111,15 +113,19 @@ const CategoryProducts = () => {
 
                         if (!checkLogin()) return;
 
-                        inCart
-                          ? removeFromCart(productId, size)
-                          : addToCart({
-                              _id: productId,
-                              name: item.name,
-                              price: item.price,
-                              image: item.image,
-                              size,
-                            });
+                        if (inCart && cartItem) {
+                          // ✅ REMOVE (correct id)
+                          removeFromCart(cartItem._id);
+                        } else {
+                          // ✅ ADD
+                          addToCart({
+                            _id: productId,
+                            name: item.name,
+                            price: item.price,
+                            image: item.image,
+                            size,
+                          });
+                        }
                       }}
                     >
                       {inCart ? "Remove" : "Add to Cart"}

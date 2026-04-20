@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
 import "./Deal.css";
 
 const API = "https://e-commerce-backend-3-ot7q.onrender.com";
-const USER_ID = "demoUser";
 
 const Deal = () => {
   const navigate = useNavigate();
+
+  const { addToCart } = useCart(); // ✅ use context
 
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,22 +20,19 @@ const Deal = () => {
       try {
         const res = await fetch(`${API}/api/products`);
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch deals");
-        }
+        if (!res.ok) throw new Error("Failed to fetch deals");
 
         const data = await res.json();
-        console.log("API DATA:", data);
 
-        // ✅ HANDLE BOTH CASES (array OR object)
-        const products = Array.isArray(data) ? data : data.products || [];
+        const products = Array.isArray(data)
+          ? data
+          : data.products || [];
 
-        // ✅ FLEXIBLE FILTER (fix main issue)
+        // ✅ safer filter
         const dealItems = products.filter((p) =>
           p.category?.toLowerCase().includes("deal")
         );
 
-        // ✅ FALLBACK (if no deals found)
         setDeals(dealItems.length > 0 ? dealItems : products.slice(0, 4));
 
       } catch (err) {
@@ -47,35 +46,32 @@ const Deal = () => {
     fetchDeals();
   }, []);
 
-  // 🛒 ADD TO CART
-  const handleAddToCart = async (deal) => {
-    try {
-      await fetch(`${API}/api/cart/add`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          productId: deal._ID,
-          name: deal.name,
-          price: deal.price,
-          image: deal.image,
-          size: deal.sizes?.[0] || "Free",
-          quantity: 1,
-          userId: USER_ID
-        })
-      });
+  // 🛒 ADD TO CART (FIXED)
+  const handleAddToCart = (deal) => {
+    addToCart({
+      _id: deal._id, // ✅ FIX
+      name: deal.name,
+      price: deal.price,
+      image: deal.image,
+      size: deal.sizes?.[0] || "Free",
+    });
 
-      alert("Added to cart");
-    } catch (err) {
-      console.error(err);
-    }
+    alert("Added to cart");
   };
 
   // 💳 BUY NOW
   const handleBuyNow = (deal) => {
     navigate("/payment", {
-      state: { product: { ...deal, size: deal.sizes?.[0] || "Free" } }
+      state: {
+        products: [
+          {
+            ...deal,
+            size: deal.sizes?.[0] || "Free",
+            quantity: 1,
+          },
+        ],
+        totalPrice: deal.price,
+      },
     });
   };
 
@@ -99,13 +95,13 @@ const Deal = () => {
             <p>No deals available</p>
           ) : (
             deals.map((deal) => (
-              <div className="deal-card" key={deal._ID}>
+              <div className="deal-card" key={deal._id}>
 
-                {/* IMAGE CLICK */}
+                {/* IMAGE */}
                 <img
                   src={deal.image || "https://via.placeholder.com/200"}
                   alt={deal.name}
-                  onClick={() => navigate(`/product/${deal._ID}`)}
+                  onClick={() => navigate(`/product/${deal._id}`)}
                   style={{ cursor: "pointer" }}
                 />
 

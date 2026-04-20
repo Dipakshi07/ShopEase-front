@@ -14,7 +14,8 @@ const Shop = () => {
   const {
     addToCart,
     removeFromCart,
-    isInCart, // now SAFE
+    isInCart,
+    getCartItem, // ✅ ADD THIS
   } = useCart();
 
   const navigate = useNavigate();
@@ -63,6 +64,7 @@ const Shop = () => {
             const size = product.sizes?.[0] || "Free";
 
             const inCart = isInCart(product._id, size);
+            const cartItem = getCartItem(product._id, size); // ✅ FIX
 
             return (
               <div className="shop-card" key={product._id}>
@@ -81,11 +83,21 @@ const Shop = () => {
                   <p>₹{product.price}</p>
 
                   <button
-                    onClick={() =>
-                      inCart
-                        ? removeFromCart(product._id, size)
-                        : addToCart({ ...product, size })
-                    }
+                    onClick={() => {
+                      if (inCart && cartItem) {
+                        // ✅ REMOVE FIXED
+                        removeFromCart(cartItem._id);
+                      } else {
+                        // ✅ ADD
+                        addToCart({
+                          _id: product._id,
+                          name: product.name,
+                          price: product.price,
+                          image: product.image,
+                          size,
+                        });
+                      }
+                    }}
                     className={inCart ? "remove-btn" : ""}
                   >
                     {inCart ? "Remove from Cart" : "Add to Cart"}
