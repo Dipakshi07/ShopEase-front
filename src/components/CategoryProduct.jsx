@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import "./CategoryProduct.css";
 
-const API = "http://localhost:5001";
+const API = "https://e-commerce-backend-3-ot7q.onrender.com";
 
 const normalize = (str) => str?.toLowerCase().trim();
 

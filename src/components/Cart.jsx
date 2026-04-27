@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Cart.css";
 
-const API = "http://localhost:5001";
+const API = "https://e-commerce-backend-3-ot7q.onrender.com";
 
 const Cart = () => {
   const navigate = useNavigate();
