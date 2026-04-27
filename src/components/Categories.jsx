@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Categories.css";
 
-const API = "https://e-commerce-backend-3-ot7q.onrender.com"; // ✅ backend
+const API = "http://localhost:5001";
 
 const categories = [
   { id: 1, name: "electronics", image: "https://img.freepik.com/premium-photo/illustration-ultra-realistic-4k-image-modern-electronic-device_756405-53536.jpg" },
@@ -14,30 +14,66 @@ const categories = [
   { id: 7, name: "girls", image: "https://cdn-icons-png.flaticon.com/512/4140/4140051.png" },
 ];
 
+const normalize = (str) => str?.toLowerCase().trim();
+
 const Categories = () => {
   const navigate = useNavigate();
-  const [allProducts, setAllProducts] = useState([]);
 
-  // ✅ FETCH FROM BACKEND
+  const [allProducts, setAllProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // ✅ FETCH PRODUCTS
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const res = await fetch(`${API}/api/products`);
+
+        if (!res.ok) throw new Error("Failed to fetch products");
+
         const data = await res.json();
 
-        // ⚠️ because backend returns { products: [...] }
-        setAllProducts(data.products || []);
+        if (!data || !Array.isArray(data.products)) {
+          throw new Error("Invalid API response");
+        }
+
+        setAllProducts(data.products);
       } catch (err) {
-        console.error("Error fetching products:", err);
+        console.error(err);
+        setError("Unable to load products");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProducts();
   }, []);
 
+  // ✅ PREPROCESS PRODUCTS (performance)
+  const categorizedProducts = useMemo(() => {
+    const map = {};
+
+    categories.forEach((cat) => {
+      map[cat.name] = [];
+    });
+
+    allProducts.forEach((item) => {
+      const cat = normalize(item.category);
+      if (map[cat]) {
+        map[cat].push(item);
+      }
+    });
+
+    return map;
+  }, [allProducts]);
+
   const handleCategoryClick = (category) => {
     navigate(`/category/${category}`);
   };
+
+  // 🔄 STATES
+  if (loading) return <h2 className="center">Loading...</h2>;
+  if (error) return <h2 className="center error">{error}</h2>;
 
   return (
     <section className="categories-section">
@@ -50,15 +86,8 @@ const Categories = () => {
 
         <div className="categories-grid">
           {categories.map((cat) => {
-
-            // ✅ FILTER FROM BACKEND DATA
-            const categoryProducts = allProducts
-              .filter(
-                (item) =>
-                  item.category?.toLowerCase().trim() ===
-                  cat.name.toLowerCase().trim()
-              )
-              .slice(0, 2);
+            const previewProducts =
+              categorizedProducts[cat.name]?.slice(0, 2) || [];
 
             return (
               <div
@@ -87,11 +116,11 @@ const Categories = () => {
 
                 {/* ✅ PRODUCT PREVIEW */}
                 <div className="product-preview">
-                  {categoryProducts.length > 0 ? (
-                    categoryProducts.map((p) => (
+                  {previewProducts.length > 0 ? (
+                    previewProducts.map((p) => (
                       <img
                         key={p._id}
-                        src={p.image}
+                        src={p.image || "https://via.placeholder.com/80"}
                         alt={p.name}
                       />
                     ))

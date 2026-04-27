@@ -1,66 +1,93 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import "./Deal.css";
 
-const API = "https://e-commerce-backend-3-ot7q.onrender.com";
+const API = "http://localhost:5001";
+
+const normalize = (str) => str?.toLowerCase().trim();
 
 const Deal = () => {
   const navigate = useNavigate();
 
-  const { addToCart } = useCart(); // ✅ use context
+  const { addToCart } = useCart();
+  const { user } = useAuth();
 
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ✅ FETCH DEALS
-  useEffect(() => {
-    const fetchDeals = async () => {
-      try {
-        const res = await fetch(`${API}/api/products`);
+  // 🔥 FETCH DEALS (clean + safe)
+  const fetchDeals = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        if (!res.ok) throw new Error("Failed to fetch deals");
+      const res = await fetch(`${API}/api/products`);
 
-        const data = await res.json();
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
-        const products = Array.isArray(data)
-          ? data
-          : data.products || [];
+      const data = await res.json();
 
-        // ✅ safer filter
-        const dealItems = products.filter((p) =>
-          p.category?.toLowerCase().includes("deal")
-        );
-
-        setDeals(dealItems.length > 0 ? dealItems : products.slice(0, 4));
-
-      } catch (err) {
-        console.error(err);
-        setError("Unable to load deals");
-      } finally {
-        setLoading(false);
+      if (!data || !Array.isArray(data.products)) {
+        throw new Error("Invalid API response");
       }
-    };
 
-    fetchDeals();
+      const products = data.products;
+
+      // ✅ better logic: use discount instead of category
+      const dealItems = products.filter(
+        (p) => (p.discount || 0) > 0
+      );
+
+      setDeals(dealItems.length ? dealItems : products.slice(0, 4));
+
+    } catch (err) {
+      console.error(err);
+      setError("Unable to load deals");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // 🛒 ADD TO CART (FIXED)
-  const handleAddToCart = (deal) => {
-    addToCart({
-      _id: deal._id, // ✅ FIX
-      name: deal.name,
-      price: deal.price,
-      image: deal.image,
-      size: deal.sizes?.[0] || "Free",
-    });
+  useEffect(() => {
+    fetchDeals();
+  }, [fetchDeals]);
 
-    alert("Added to cart");
+  // 🔐 LOGIN CHECK
+  const checkLogin = () => {
+    if (!user) {
+      alert("Please login first");
+      navigate("/login");
+      return false;
+    }
+    return true;
+  };
+
+  // 🛒 ADD TO CART (safe)
+  const handleAddToCart = async (deal) => {
+    if (!checkLogin()) return;
+
+    try {
+      await addToCart({
+        _id: deal._id,
+        name: deal.name,
+        price: deal.price,
+        image: deal.image,
+        size: deal.sizes?.[0] || "Free",
+        quantity: 1,
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add to cart");
+    }
   };
 
   // 💳 BUY NOW
   const handleBuyNow = (deal) => {
+    if (!checkLogin()) return;
+
     navigate("/payment", {
       state: {
         products: [
@@ -75,11 +102,9 @@ const Deal = () => {
     });
   };
 
-  // 🔄 LOADING
-  if (loading) return <h2 style={{ padding: "20px" }}>Loading deals...</h2>;
-
-  // ❌ ERROR
-  if (error) return <h2 style={{ color: "red" }}>{error}</h2>;
+  // 🔄 STATES
+  if (loading) return <h2 className="center">Loading deals...</h2>;
+  if (error) return <h2 className="center error">{error}</h2>;
 
   return (
     <section id="deals" className="deals">
@@ -111,7 +136,8 @@ const Deal = () => {
                   </span>
 
                   <h3>{deal.name}</h3>
-                  <p>{deal.description}</p>
+                  <p>{deal.description || "No description available"}</p>
+
                   <p className="price">₹{deal.price}</p>
 
                   <div className="deal-buttons">

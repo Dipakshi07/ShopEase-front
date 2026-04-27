@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import "./ProductDetails.css";
 
-const API = "https://e-commerce-backend-3-ot7q.onrender.com";
+const API = "http://localhost:5001";
 
 export default function ProductDetails() {
   const { id } = useParams();

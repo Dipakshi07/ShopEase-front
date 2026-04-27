@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import "./CategoryProduct.css";
 
-const API = "https://e-commerce-backend-3-ot7q.onrender.com";
+const API = "http://localhost:5001";
+
+const normalize = (str) => str?.toLowerCase().trim();
 
 const CategoryProducts = () => {
   const { category } = useParams();
@@ -16,42 +18,51 @@ const CategoryProducts = () => {
     addToCart,
     removeFromCart,
     isInCart,
-    getCartItem, // ✅ IMPORTANT
+    getCartItem,
   } = useCart();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // 🔥 FETCH PRODUCTS
-  useEffect(() => {
+  // 🔥 FETCH PRODUCTS (optimized)
+  const fetchProducts = useCallback(async () => {
     if (!category) return;
 
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
+    try {
+      setLoading(true);
+      setError("");
 
-        const res = await fetch(
-          `${API}/api/products/category/${category}`
-        );
+      const res = await fetch(
+        `${API}/api/products/category/${normalize(category)}`
+      );
 
-        if (!res.ok) throw new Error("Failed to fetch");
-
-        const data = await res.json();
-        setProducts(data.products || []);
-      } catch (err) {
-        setError("Failed to load products");
-        setProducts([]);
-      } finally {
-        setLoading(false);
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
       }
-    };
 
-    fetchProducts();
+      const data = await res.json();
+
+      if (!data || !Array.isArray(data.products)) {
+        throw new Error("Invalid API response");
+      }
+
+      setProducts(data.products);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load products");
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   }, [category]);
 
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
   if (!category) {
-    return <h2 style={{ padding: "20px" }}>Category not found</h2>;
+    return <h2 className="center">Category not found</h2>;
   }
 
   // 🔐 LOGIN CHECK
@@ -79,11 +90,11 @@ const CategoryProducts = () => {
       ) : (
         <div className="products-grid">
           {products.map((item) => {
-            const size = item.sizes?.[0] || "Free";
+            const size = item.sizes?.length ? item.sizes[0] : "Free";
             const productId = item._id;
 
             const inCart = isInCart(productId, size);
-            const cartItem = getCartItem(productId, size); // ✅ FIX
+            const cartItem = getCartItem(productId, size);
 
             return (
               <div className="product-card" key={productId}>
@@ -102,34 +113,38 @@ const CategoryProducts = () => {
                   <h3 className="product-name">{item.name}</h3>
                   <p className="product-price">₹{item.price}</p>
 
-                  {/* 🔥 BUTTON GROUP */}
+                  {/* 🔥 BUTTONS */}
                   <div className="btn-group">
 
                     {/* ADD / REMOVE */}
-                    <button
-                      className={`product-btn ${inCart ? "remove" : ""}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
 
-                        if (!checkLogin()) return;
+                   <button
+                     className="product-btn"
+                     onClick={async (e) => {
+                     e.stopPropagation();
 
-                        if (inCart && cartItem) {
-                          // ✅ REMOVE (correct id)
-                          removeFromCart(cartItem._id);
-                        } else {
-                          // ✅ ADD
-                          addToCart({
-                            _id: productId,
-                            name: item.name,
-                            price: item.price,
-                            image: item.image,
-                            size,
-                          });
+                      if (!user) {
+                          alert("Login first");
+                          navigate("/login");
+                          return;
                         }
-                      }}
+
+                     if (inCart && cartItem) {
+                        await removeFromCart(cartItem._id);
+                    } else {
+                          await addToCart({
+                          _id: productId,
+                          name: item.name,
+                          price: item.price,
+                          image: item.image,
+                          size,
+                          quantity: 1,
+                        });
+                      }
+                    }}
                     >
-                      {inCart ? "Remove" : "Add to Cart"}
-                    </button>
+                    {inCart ? "Remove" : "Add to Cart"}
+                  </button>
 
                     {/* BUY NOW */}
                     <button

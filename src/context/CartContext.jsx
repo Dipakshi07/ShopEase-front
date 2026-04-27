@@ -1,51 +1,34 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 const CartContext = createContext();
-
-export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart must be used within CartProvider");
-  }
-  return context;
-};
-
-const API = "https://e-commerce-backend-3-ot7q.onrender.com/api/cart";
+const API = "http://localhost:5001";
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [cart, setCart] = useState([]);
 
-  // 🔥 LOAD CART
-  useEffect(() => {
-    fetchCart();
-  }, []);
+  const userId = localStorage.getItem("userId");
 
-  // 🔥 FETCH CART
+  // ✅ FETCH CART FROM BACKEND
   const fetchCart = async () => {
+    if (!userId) return;
+
     try {
-      const userId = localStorage.getItem("userId");
-      if (!userId) return;
-
-      const res = await fetch(`${API}/${userId}`);
+      const res = await fetch(`${API}/api/cart/${userId}`);
       const data = await res.json();
-
-      setCartItems(data || []);
+      setCart(data || []);
     } catch (err) {
-      console.error("Fetch cart error:", err.message);
+      console.error("Fetch cart error:", err);
     }
   };
 
-  // 🔥 ADD TO CART
+  useEffect(() => {
+    fetchCart();
+  }, [userId]);
+
+  // ✅ ADD TO CART
   const addToCart = async (product) => {
     try {
-      const userId = localStorage.getItem("userId");
-
-      if (!userId) {
-        alert("Please login first");
-        return;
-      }
-
-      await fetch(API, {
+      const res = await fetch(`${API}/api/cart/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,121 +39,63 @@ export const CartProvider = ({ children }) => {
           name: product.name,
           price: product.price,
           image: product.image,
-          size: product.size || "Free",
-          quantity: 1,
+          size: product.size,
+          quantity: product.quantity || 1,
         }),
       });
 
-      fetchCart();
+      if (!res.ok) throw new Error("Add failed");
+
+      await fetchCart(); // 🔥 refresh UI
     } catch (err) {
-      console.error("Add to cart error:", err.message);
+      console.error(err);
     }
   };
 
-  // ✅ 🔥 FIXED REMOVE
-  const removeFromCart = async (productId, size) => {
+  // ✅ REMOVE
+  const removeFromCart = async (cartItemId) => {
     try {
-      // 👉 find correct cart item
-      const item = cartItems.find(
-        (i) =>
-          (i.productId || i._id) === productId &&
-          i.size === size
-      );
-
-      if (!item) return;
-
-      // 👉 use REAL cart item id
-      await fetch(`${API}/${item._id}`, {
+      const res = await fetch(`${API}/api/cart/${cartItemId}`, {
         method: "DELETE",
       });
 
-      fetchCart();
+      if (!res.ok) throw new Error("Remove failed");
+
+      await fetchCart();
     } catch (err) {
-      console.error("Remove error:", err.message);
+      console.error(err);
     }
   };
 
-  // 🔥 INCREASE
-  const increaseQuantity = async (id, size) => {
-    const item = cartItems.find(
-      (i) =>
-        (i.productId || i._id) === id &&
-        i.size === size
-    );
-
-    if (!item) return;
-
-    await updateQty(item._id, item.quantity + 1);
-  };
-
-  // 🔥 DECREASE
-  const decreaseQuantity = async (id, size) => {
-    const item = cartItems.find(
-      (i) =>
-        (i.productId || i._id) === id &&
-        i.size === size
-    );
-
-    if (!item || item.quantity <= 1) return;
-
-    await updateQty(item._id, item.quantity - 1);
-  };
-
-  // 🔥 UPDATE QTY
-  const updateQty = async (cartItemId, quantity) => {
-    try {
-      const userId = localStorage.getItem("userId");
-
-      await fetch(`${API}/update`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          cartItemId,
-          userId,
-          quantity,
-        }),
-      });
-
-      fetchCart();
-    } catch (err) {
-      console.error("Update qty error:", err.message);
-    }
-  };
-
-  // ✅ FIXED isInCart
-  const isInCart = (id, size) => {
-    return cartItems.some(
+  // ✅ CHECK
+  const isInCart = (productId, size) => {
+    return cart.some(
       (item) =>
-        (item.productId || item._id) === id &&
-        item.size === size
+        item.productId === productId && item.size === size
     );
   };
 
-  // ✅ FIXED getCartItem
-  const getCartItem = (id, size) => {
-    return cartItems.find(
+  // ✅ GET ITEM
+  const getCartItem = (productId, size) => {
+    return cart.find(
       (item) =>
-        (item.productId || item._id) === id &&
-        item.size === size
+        item.productId === productId && item.size === size
     );
   };
 
   return (
     <CartContext.Provider
       value={{
-        cartItems,
+        cart,
         addToCart,
         removeFromCart,
-        increaseQuantity,
-        decreaseQuantity,
-        getCartItem,
         isInCart,
-        fetchCart,
+        getCartItem,
       }}
     >
       {children}
     </CartContext.Provider>
   );
 };
+
+export const useCart = () => useContext(CartContext);

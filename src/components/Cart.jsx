@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Cart.css";
 
-const API = "https://e-commerce-backend-3-ot7q.onrender.com";
+const API = "http://localhost:5001";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -13,8 +13,8 @@ const Cart = () => {
 
   const USER_ID = localStorage.getItem("userId");
 
-  // ✅ FETCH CART
-  const fetchCart = async () => {
+  // ✅ FETCH CART (optimized)
+  const fetchCart = useCallback(async () => {
     if (!USER_ID) {
       setError("User not logged in");
       setLoading(false);
@@ -23,41 +23,61 @@ const Cart = () => {
 
     try {
       const res = await fetch(`${API}/api/cart/${USER_ID}`);
-      if (!res.ok) throw new Error("Failed to fetch cart");
+
+      if (!res.ok) {
+        throw new Error(`Server Error: ${res.status}`);
+      }
 
       const data = await res.json();
-      setCartItems(data || []);
+
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid cart data");
+      }
+
+      setCartItems(data);
     } catch (err) {
       console.error(err);
       setError("Unable to load cart");
     } finally {
       setLoading(false);
     }
-  };
+  }, [USER_ID]);
 
   useEffect(() => {
     fetchCart();
-  }, [USER_ID]);
+  }, [fetchCart]);
 
-  // ✅ REMOVE
+  // ✅ REMOVE (safe + consistent)
   const handleRemove = async (cartItemId) => {
     try {
-      await fetch(`${API}/api/cart/${cartItemId}`, {
+      const res = await fetch(`${API}/api/cart/${cartItemId}`, {
         method: "DELETE",
       });
 
-      setCartItems(prev =>
-        prev.filter(item => item._id !== cartItemId)
+      if (!res.ok) throw new Error("Delete failed");
+
+      setCartItems((prev) =>
+        prev.filter((item) => item._id !== cartItemId)
       );
     } catch (err) {
       console.error(err);
+      alert("Failed to remove item");
     }
   };
 
-  // ✅ UPDATE QTY (BACKEND SYNC)
-  const updateQty = async (cartItemId, quantity) => {
+  // ✅ UPDATE QTY (Optimistic UI)
+  const updateQty = async (cartItemId, newQty) => {
+    // optimistic update
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item._id === cartItemId
+          ? { ...item, quantity: newQty }
+          : item
+      )
+    );
+
     try {
-      await fetch(`${API}/api/cart/update`, {
+      const res = await fetch(`${API}/api/cart/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -65,22 +85,24 @@ const Cart = () => {
         body: JSON.stringify({
           cartItemId,
           userId: USER_ID,
-          quantity,
+          quantity: newQty,
         }),
       });
 
-      fetchCart();
+      if (!res.ok) throw new Error("Update failed");
     } catch (err) {
       console.error(err);
+      alert("Failed to update quantity");
+
+      // rollback
+      fetchCart();
     }
   };
 
-  // ➕ INCREASE
   const increaseQty = (item) => {
     updateQty(item._id, item.quantity + 1);
   };
 
-  // ➖ DECREASE
   const decreaseQty = (item) => {
     if (item.quantity <= 1) return;
     updateQty(item._id, item.quantity - 1);
@@ -91,10 +113,13 @@ const Cart = () => {
     const discount = item.discount || 0;
     const qty = item.quantity || 1;
 
-    const discountAmount = (item.price * discount) / 100;
-    return total + (item.price - discountAmount) * qty;
+    const finalPrice =
+      item.price - (item.price * discount) / 100;
+
+    return total + finalPrice * qty;
   }, 0);
 
+  // 🔄 STATES
   if (loading) return <h2 style={{ padding: "20px" }}>Loading cart...</h2>;
   if (error) return <h2 style={{ padding: "20px", color: "red" }}>{error}</h2>;
 
@@ -111,12 +136,11 @@ const Cart = () => {
               const discount = item.discount || 0;
               const qty = item.quantity || 1;
 
-              const discountAmount = (item.price * discount) / 100;
-              const finalPrice = item.price - discountAmount;
+              const finalPrice =
+                item.price - (item.price * discount) / 100;
 
               return (
                 <div className="cart-item" key={item._id}>
-                  
                   <img
                     src={item.image || "https://via.placeholder.com/100"}
                     alt={item.name}
